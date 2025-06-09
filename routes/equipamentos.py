@@ -11,7 +11,12 @@ def buscarEquipamentos():
 
     equipamentos = cursor.fetchall()
 
-    return jsonify(equipamentos)
+    conn.close()
+
+    if equipamentos is None or equipamentos == []:
+        return jsonify({"error": "Recurso não encontrado"}), 404
+    else:
+        return jsonify(equipamentos)
 
 def buscarEquipamentoPorID(id: int):
     conn = sql.connect('equipamentos.db')
@@ -22,8 +27,13 @@ def buscarEquipamentoPorID(id: int):
     cursor.execute(query, (id,))
 
     equipamento = cursor.fetchone()
+    
+    conn.close()
 
-    return jsonify(equipamento)
+    if equipamento is None or equipamento == []:
+        return jsonify({"error": "Recurso não encontrado"}), 404
+    else:
+        return jsonify(equipamento)
 
 def pegarStatusDoEquipamentoPorID(id: int):
     conn = sql.connect('equipamentos.db')
@@ -35,4 +45,9 @@ def pegarStatusDoEquipamentoPorID(id: int):
 
     equipamento = cursor.fetchone()
 
-    return jsonify(equipamento)
+    conn.close()
+
+    if equipamento is None or equipamento == []:
+        return jsonify({"error": "Recurso não encontrado"}), 404
+    else:
+        return jsonify(equipamento)
