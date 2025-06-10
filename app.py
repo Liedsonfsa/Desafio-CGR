@@ -1,7 +1,7 @@
 from flask import Flask
 from routes.equipamentos import buscarEquipamentos, buscarEquipamentoPorID, pegarStatusDoEquipamentoPorID
 from routes.logs import getLogs
-from routes.recursos import buscarRecursosDeUmEquipamentoPorID
+from routes.recursos import buscarRecursosDeUmEquipamentoPorID, alocarRecurso
 
 app = Flask(__name__)
 
@@ -10,6 +10,7 @@ app.add_url_rule('/equipamentos/<int:id>', 'buscarEquipamentoPorID', buscarEquip
 app.add_url_rule('/equipamentos/<int:id>/status', 'pegarStatusDoEquipamentoPorID', pegarStatusDoEquipamentoPorID, methods=['PUT'])
 app.add_url_rule('/logs', 'logs', getLogs, methods=['GET'])
 app.add_url_rule('/equipamentos/<int:equipamentoId>/recursos', 'buscarRecursosDeUmEquipamentoPorID', buscarRecursosDeUmEquipamentoPorID, methods=['GET'])
+app.add_url_rule('/recursos/alocar', 'alocarRecurso', alocarRecurso, methods=['POST'])
 
 
 if __name__ == '__main__':
