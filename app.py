@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 app.add_url_rule('/equipamentos', 'buscarEquipamentos', buscarEquipamentos, methods=['GET'])
 app.add_url_rule('/equipamentos/<int:id>', 'buscarEquipamentoPorID', buscarEquipamentoPorID, methods=['GET'])
-app.add_url_rule('/equipamentos/<int:id>/status', 'pegarStatusDoEquipamentoPorID', pegarStatusDoEquipamentoPorID, methods=['GET'])
+app.add_url_rule('/equipamentos/<int:id>/status', 'pegarStatusDoEquipamentoPorID', pegarStatusDoEquipamentoPorID, methods=['PUT'])
 app.add_url_rule('/logs', 'logs', getLogs, methods=['GET'])
 app.add_url_rule('/equipamentos/<int:equipamentoId>/recursos', 'buscarRecursosDeUmEquipamentoPorID', buscarRecursosDeUmEquipamentoPorID, methods=['GET'])
 

@@ -1,4 +1,6 @@
-from flask import jsonify
+from flask import jsonify, request
+from routes.logs import generateLog
+from datetime import datetime
 import sqlite3 as sql
 
 def buscarEquipamentos():
@@ -36,18 +38,26 @@ def buscarEquipamentoPorID(id: int):
         return jsonify(equipamento)
 
 def pegarStatusDoEquipamentoPorID(id: int):
+    dados_recebidos = request.get_json()
+
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
-    query = 'SELECT status FROM equipamentos WHERE id = ?'
+    query = 'UPDATE equipamentos SET status = ? WHERE id = ?'
 
-    cursor.execute(query, (id,))
+    cursor.execute(query, (dados_recebidos['status'], id))
 
-    equipamento = cursor.fetchone()
+    conn.commit()
 
     conn.close()
 
-    if equipamento is None or equipamento == []:
-        return jsonify({"error": "Recurso não encontrado"}), 404
-    else:
-        return jsonify(equipamento)
+    generateLog(id, 'Status Change', dados_recebidos['descricao'])
+
+    return jsonify(
+        {
+            "equipamento_id": id,
+            "new_status": dados_recebidos['status'], 
+            "tipo_evento": 'Status Change',
+            "descricao": dados_recebidos['descricao']
+        }
+    )
