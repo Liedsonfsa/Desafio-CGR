@@ -2,7 +2,7 @@ from flask import jsonify
 import sqlite3 as sql
 from datetime import datetime
 
-def getLogs():
+def get():
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -12,7 +12,9 @@ def getLogs():
 
     logs = cursor.fetchall()
 
-    return jsonify(logs)
+    conn.close()
+    
+    return logs
 
 def generateLog(equipamentoID: int, event_type: str, descricao: str):
     conn = sql.connect('equipamentos.db')

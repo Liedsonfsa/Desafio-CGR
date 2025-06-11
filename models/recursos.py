@@ -1,8 +1,6 @@
-from flask import jsonify, request
-from routes.logs import generateLog
 import sqlite3 as sql
 
-def buscarRecursosDeUmEquipamentoPorID(equipamentoId: int):
+def buscarRecursosPorID(equipamentoId: int):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -14,12 +12,9 @@ def buscarRecursosDeUmEquipamentoPorID(equipamentoId: int):
 
     conn.close()
 
-    if recursos is None or recursos == []:
-        return jsonify({"error": "Recurso não encontrado"}), 404
-    else:
-        return jsonify(recursos)
+    return recursos
     
-def verificarStatusDoRecurso(id: int, tipo_recurso: str):
+def verificarStatus(id: int, tipo_recurso: str):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -41,27 +36,9 @@ def alocar(id: int, tipo_recurso: str):
 
     conn.commit()
     conn.close()
+    
 
-def alocarRecurso():
-    request_data = request.get_json()
-
-    equipamento_id = request_data['equipamento_id']
-    tipo_recurso = request_data['tipo_recurso']
-
-    res = verificarStatusDoRecurso(equipamento_id, tipo_recurso)
-
-    if res :
-        alocar(equipamento_id, tipo_recurso)
-        # generateLog(equipamento_id, 'Resource Allocated', '')
-        return jsonify({"sucesso": "recurso alocado com sucesso"})
-    else:
-        return jsonify({"error": "Este recurso já está alocado"}), 401
-
-def desalocarRecurso():
-    request_data = request.get_json()
-
-    recurso_id = request_data['recurso_id']
-
+def desalocar(recurso_id: int):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -72,4 +49,4 @@ def desalocarRecurso():
     conn.commit()
     conn.close()
 
-    return jsonify({"sucesso": "Recurso desalocado com sucesso"})
+    return {"sucesso": "Recurso desalocado com sucesso"}
