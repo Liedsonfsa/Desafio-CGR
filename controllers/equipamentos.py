@@ -1,6 +1,8 @@
 from flask import jsonify, request
-from models.equipamentos import buscar, buscarPorID, alterarStatusPorID
+from models.equipamentos import buscar, buscarPorID, alterarStatusPorID, buscarRecursos
 from models.logs import generateLog
+from models.recursos import setarStatusDeFalha
+from random import sample, choice
 
 def buscarEquipamentos():
     equipamentos = buscar()
@@ -36,3 +38,27 @@ def alterarStatusDoEquipamento(id: int):
             "descricao": description
         }
     )
+
+def simularFalha(equipamento_id: int):
+    recursos = buscarRecursos(equipamento_id)
+
+    num_falhas = max(1, round(len(recursos) * 0.3))
+    recursos_afetados = sample(recursos, num_falhas)
+
+    falhas_possiveis = ['Indisponível', 'Com Problema']
+
+    for recurso_id, valor_recurso in recursos_afetados:
+        novo_status = choice(falhas_possiveis)
+
+        setarStatusDeFalha(novo_status, recurso_id)
+
+        descricao = f"Recurso {valor_recurso} marcado como {novo_status} (simulação)"
+
+        generateLog(equipamento_id, 'Failure', descricao)
+    
+    return jsonify({
+        "success": True,
+        "message": f"Simulação de falha concluída. {num_falhas} recursos afetados.",
+        "equipamento_id": equipamento_id,
+        "recursos_afetados": len(recursos_afetados)
+    }), 200

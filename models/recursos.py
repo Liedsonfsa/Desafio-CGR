@@ -116,4 +116,15 @@ def alocacaoInteligente(tipo_recurso: str, equipamento_id: any):
         
     finally:
         conn.close()
-    
+
+def setarStatusDeFalha(novo_status: str, recurso_id: int):
+    conn = sql.connect('equipamentos.db')
+    cursor = conn.cursor()
+
+    cursor.execute(
+    "UPDATE RecursosRede SET status_alocacao = ?, ultima_atualizacao = ? WHERE id = ?",
+    (novo_status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), recurso_id)
+    )
+
+    conn.commit()
+    conn.close()
