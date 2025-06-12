@@ -1,7 +1,6 @@
 import sqlite3 as sql
-from datetime import datetime
 
-def buscar():
+def buscar_equipamentos():
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -15,7 +14,7 @@ def buscar():
 
     return equipamentos
 
-def buscarPorID(id: int):
+def buscar_equipamento(id: int):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
@@ -29,19 +28,19 @@ def buscarPorID(id: int):
 
     return equipamento
 
-def alterarStatusPorID(id: int, new_status: str):
+def atualizar_status(id: int, novo_status: str):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
     query = 'UPDATE EquipamentosRede SET status = ? WHERE id = ?'
 
-    cursor.execute(query, (new_status, id))
+    cursor.execute(query, (novo_status, id))
 
     conn.commit()
 
     conn.close()
 
-def buscarRecursos(equipamento_id: int):
+def buscar_recursos(equipamento_id: int):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
    

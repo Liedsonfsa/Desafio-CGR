@@ -1,66 +1,89 @@
 import sqlite3 as sql
 from datetime import datetime
+from database.conexao import conectar
 
-def buscarRecursosPorID(equipamentoId: int):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+def buscar_recursos_por_id(equipamentoId: int):
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
-    query = 'SELECT * FROM RecursosRede WHERE equipamento_id = ?'
+        query = 'SELECT * FROM RecursosRede WHERE equipamento_id = ?'
 
-    cursor.execute(query, (equipamentoId,))
+        cursor.execute(query, (equipamentoId,))
 
-    recursos = cursor.fetchall()
+        return cursor.fetchall()
+    except sql.Error as e:
+        return {"error": f'Error ao buscar recursos: {e}'}
+    finally:
+        conn.close()
 
-    conn.close()
-
-    return recursos
     
 def verificarStatus(id: int, tipo_recurso: str):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
-
-    query = "SELECT EXISTS(SELECT 1 FROM RecursosRede WHERE (equipamento_id = ? AND tipo_recurso = ? AND status_alocacao = 'Disponível') LIMIT 1)"
-    cursor.execute(query, (id, tipo_recurso))
-    
-    resultado = cursor.fetchone()[0]
-    conn.close()
-
-    return bool(resultado)
-
-def alocar(id: int, tipo_recurso: str):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
-
-    query = "UPDATE RecursosRede SET status_alocacao = 'Alocado' WHERE equipamento_id = ? AND tipo_recurso = ?"
-
-    cursor.execute(query, (id, tipo_recurso))
-
-    conn.commit()
-    conn.close()
-    
-
-def desalocar(recurso_id: int):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
-
-    query = "UPDATE RecursosRede SET status_alocacao = 'Disponível' WHERE id = ?"
-
-    cursor.execute(query, (recurso_id, ))
-
-    conn.commit()
-    conn.close()
-
-    return {"sucesso": "Recurso desalocado com sucesso"}
-
-def alocacaoInteligente(tipo_recurso: str, equipamento_id: any):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
-
+    conn = None
     try:
-        query = str
-        id = 0
-        params = tuple
-        try:
+        conn = conectar()
+        cursor = conn.cursor()
+
+        query = "SELECT EXISTS(SELECT 1 FROM RecursosRede WHERE (equipamento_id = ? AND tipo_recurso = ? AND status_alocacao = 'Disponível') LIMIT 1)"
+        cursor.execute(query, (id, tipo_recurso))
+        
+        return bool(cursor.fetchone()[0])
+    except:
+        return False
+    finally:
+        conn.close()
+
+def alocar_recurso(id: int, tipo_recurso: str):
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+
+        query = "UPDATE RecursosRede SET status_alocacao = 'Alocado' WHERE equipamento_id = ? AND tipo_recurso = ?"
+
+        cursor.execute(query, (id, tipo_recurso))
+
+        conn.commit()
+    except sql.Error as e:
+        print(f"Erro ao alocar recurso: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            conn.close()
+    
+def desalocar_recurso(recurso_id: int):
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+
+        query = "UPDATE RecursosRede SET status_alocacao = 'Disponível' WHERE id = ?"
+
+        cursor.execute(query, (recurso_id, ))
+        conn.commit()
+
+        return {"sucesso": "Recurso desalocado com sucesso"}
+    except sql.Error as e:
+        print(f"Erro ao desalocar recurso: {e}")
+        if conn:
+            conn.rollback()
+        return {"erro": "Falha ao desalocar recurso"}
+    finally:
+        if conn:
+            conn.close()
+
+def alocacao_inteligente(tipo_recurso: str, equipamento_id: any):
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+
+        query = ""
+        params = ()
+
+        if isinstance(equipamento_id, dict):
             id = int(equipamento_id['equipamento_id'])
             query = """
             SELECT id, valor_recurso 
@@ -71,7 +94,7 @@ def alocacaoInteligente(tipo_recurso: str, equipamento_id: any):
             LIMIT 1
             """
             params = (tipo_recurso, id)
-        except:
+        else:
             query = """
             SELECT id, equipamento_id, valor_recurso 
             FROM RecursosRede 
@@ -89,42 +112,50 @@ def alocacaoInteligente(tipo_recurso: str, equipamento_id: any):
         if not recurso:
             return {
                 "success": False,
-                "message": "Nenhum recurso disponível encontrado para os critérios informados",
-                "tipo_recurso": tipo_recurso,
+                "message": "Nenhum recurso disponível encontrado para os critérios informados"
             }
         
-        if id != 0:
+        if len(recurso) == 2:
             recurso_id, valor_recurso = recurso
+            equip_id = equipamento_id['equipamento_id']
         else:
-            recurso_id, id, valor_recurso = recurso
+            recurso_id, equip_id, valor_recurso = recurso
         
         return {
             "success": True,
             "recurso_id": recurso_id,
-            "equipamento_id": id,
+            "equipamento_id": equip_id,
             "tipo_recurso": tipo_recurso,
             "valor_recurso": valor_recurso,
             "message": "Recurso encontrado",
         }
-        
+            
     except sql.Error as e:
         conn.rollback()
         return {
             "success": False,
             "message": f"Erro ao alocar recurso: {str(e)}",
         }
-        
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
-def setarStatusDeFalha(novo_status: str, recurso_id: int):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+def setar_status_falha(novo_status: str, recurso_id: int):
+    conn = None
+    try:
+        conn = sql.connect('equipamentos.db')
+        cursor = conn.cursor()
 
-    cursor.execute(
-    "UPDATE RecursosRede SET status_alocacao = ?, ultima_atualizacao = ? WHERE id = ?",
-    (novo_status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), recurso_id)
-    )
+        cursor.execute(
+        "UPDATE RecursosRede SET status_alocacao = ?, ultima_atualizacao = ? WHERE id = ?",
+        (novo_status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), recurso_id)
+        )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except sql.Error as e:
+        print(f"Erro ao atualizar status: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            conn.close()

@@ -1,30 +1,43 @@
-from flask import jsonify
 import sqlite3 as sql
-from datetime import datetime
+from database.conexao import conectar
 
-def get():
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+def pegar_logs():
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
-    query = 'SELECT * FROM EventosLogs'
+        query = 'SELECT * FROM EventosLogs'
 
-    cursor.execute(query)
+        cursor.execute(query)
 
-    logs = cursor.fetchall()
+        return cursor.fetchall()
+    except sql.Error as e:
+        print(f"Erro ao buscar logs: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
-    conn.close()
-    
-    return logs
+def gerar_log(equipamentoID: int, tipo_evento: str, descricao: str):
+    conn = None
+    try:   
+        conn = conectar()
+        cursor = conn.cursor()
 
-def generateLog(equipamentoID: int, event_type: str, descricao: str):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+        query = 'INSERT INTO EventosLogs (equipamento_id, tipo_evento, descricao) VALUES (?, ?, ?)'
 
-    query = 'INSERT INTO EventosLogs (equipamento_id, tipo_evento, descricao) VALUES (?, ?, ?)'
-
-    cursor.execute(query, (equipamentoID, event_type, descricao))
-    conn.commit()
-
-    conn.close()
+        cursor.execute(query, (equipamentoID, tipo_evento, descricao))
+        conn.commit()
+        
+        return True
+    except sql.Error as e:
+        print(f"Erro ao gerar log: {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn:
+            conn.close()
 
     
