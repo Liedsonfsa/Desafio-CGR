@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from models.recursos import buscarRecursosPorID, verificarStatus, alocar, desalocar
+from models.recursos import buscarRecursosPorID, verificarStatus, alocar, desalocar, alocacaoInteligente
 from models.logs import generateLog
 
 def buscarRecursosDeUmEquipamentoPorID(equipamentoId: int):
@@ -26,12 +26,18 @@ def alocarRecurso():
         return jsonify({"error": "Este recurso já está alocado"}), 401
 
 def desalocarRecurso():
-    request_data = request.get_json()
+    recurso_id = request.args.get('recurso_id')
 
-    recurso_id = request_data['recurso_id']
-
-    response = desalocar(recurso_id)
+    response = desalocar(recurso_id['recurso_id'])
     generateLog(recurso_id, 'Resource Deallocated', 'Recurso desalocado')
 
     return jsonify(response)
-    
+
+def alocarInteligentemente():
+
+    tipo_recurso = request.get_json('tipo_recurso')
+    equipamento_id = request.get_json('equipamento_id')
+
+    response = alocacaoInteligente(str(tipo_recurso['tipo_recurso']), equipamento_id)
+
+    return jsonify(response)
