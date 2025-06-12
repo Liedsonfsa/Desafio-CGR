@@ -28,9 +28,7 @@ def alocarRecurso():
 def desalocarRecurso():
     recurso_id = request.args.get('recurso_id')
 
-    # recurso_id = request_data['recurso_id']
-
-    response = desalocar(recurso_id)
+    response = desalocar(recurso_id['recurso_id'])
     generateLog(recurso_id, 'Resource Deallocated', 'Recurso desalocado')
 
     return jsonify(response)
@@ -38,7 +36,7 @@ def desalocarRecurso():
 def alocarInteligentemente():
 
     tipo_recurso = request.get_json('tipo_recurso')
-    equipamento_id = request.args.get('equipamento_id')
+    equipamento_id = request.get_json('equipamento_id')
 
     response = alocacaoInteligente(str(tipo_recurso['tipo_recurso']), equipamento_id)
 

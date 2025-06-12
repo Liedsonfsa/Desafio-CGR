@@ -52,21 +52,37 @@ def desalocar(recurso_id: int):
 
     return {"sucesso": "Recurso desalocado com sucesso"}
 
-def alocacaoInteligente(tipo_recurso: str, equipamento_id: int):
+def alocacaoInteligente(tipo_recurso: str, equipamento_id: any):
     conn = sql.connect('equipamentos.db')
     cursor = conn.cursor()
 
     try:
-        query = """
-        SELECT id, equipamento_id, valor_recurso 
-        FROM RecursosRede 
-        WHERE tipo_recurso = ? 
-          AND status_alocacao = 'Disponível'
-        ORDER BY ultima_atualizacao ASC
-        LIMIT 1
-        """
+        query = str
+        id = 0
+        params = tuple
+        try:
+            id = int(equipamento_id['equipamento_id'])
+            query = """
+            SELECT id, valor_recurso 
+            FROM RecursosRede 
+            WHERE (tipo_recurso = ? 
+            AND status_alocacao = 'Disponível' AND equipamento_id = ?)
+            ORDER BY ultima_atualizacao ASC
+            LIMIT 1
+            """
+            params = (tipo_recurso, id)
+        except:
+            query = """
+            SELECT id, equipamento_id, valor_recurso 
+            FROM RecursosRede 
+            WHERE tipo_recurso = ? 
+            AND status_alocacao = 'Disponível'
+            ORDER BY ultima_atualizacao ASC
+            LIMIT 1
+            """
+            params = (tipo_recurso, )
         
-        cursor.execute(query, (tipo_recurso,))
+        cursor.execute(query, params)
         
         recurso = cursor.fetchone()
         
@@ -74,25 +90,28 @@ def alocacaoInteligente(tipo_recurso: str, equipamento_id: int):
             return {
                 "success": False,
                 "message": "Nenhum recurso disponível encontrado para os critérios informados",
-                "tipo_recurso": tipo_recurso
+                "tipo_recurso": tipo_recurso,
             }
         
-        recurso_id, equipamento_id, valor_recurso = recurso
+        if id != 0:
+            recurso_id, valor_recurso = recurso
+        else:
+            recurso_id, id, valor_recurso = recurso
         
         return {
             "success": True,
             "recurso_id": recurso_id,
-            "equipamento_id": equipamento_id,
+            "equipamento_id": id,
             "tipo_recurso": tipo_recurso,
             "valor_recurso": valor_recurso,
-            "message": "Recurso encontrado"
+            "message": "Recurso encontrado",
         }
         
     except sql.Error as e:
         conn.rollback()
         return {
             "success": False,
-            "message": f"Erro ao alocar recurso: {str(e)}"
+            "message": f"Erro ao alocar recurso: {str(e)}",
         }
         
     finally:
