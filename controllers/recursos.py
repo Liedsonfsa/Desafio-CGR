@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from models.recursos import buscar_recursos_por_id, verificarStatus, alocar_recurso, desalocar_recurso, alocacao_inteligente
+from models.recursos import buscar_recursos_por_id, verificar_status, alocar, desalocar, alocacao_inteligente
 from models.logs import gerar_log
 from flasgger import swag_from
 
@@ -162,16 +162,16 @@ def alocar_recurso():
                 "error": "Dados incompletos no request"
         }), 400
 
-        equipamento_id = request_data['equipamento_id']
-        tipo_recurso = request_data['tipo_recurso']
+        equipamento_id = int(request_data['equipamento_id'])
+        tipo_recurso = str(request_data['tipo_recurso'])
 
-        if not verificarStatus(equipamento_id, tipo_recurso):
+        if not verificar_status(equipamento_id, tipo_recurso):
             return jsonify({
                 "sucesso": False,
                 "error": "Recurso não disponível para alocação"
             }), 409
 
-        if not alocar_recurso(equipamento_id, tipo_recurso):
+        if not alocar(equipamento_id, tipo_recurso):
             return jsonify({
                 "sucesso": False,
                 "error": "Falha ao alocar recurso"
@@ -182,7 +182,7 @@ def alocar_recurso():
     except Exception as e:
         return jsonify({
             "sucesso": False,
-            "error": "Erro interno ao alocar recurso"
+            "error": f"Erro interno ao alocar recurso: {e}",
         }), 500
 
 def desalocar_recurso():
@@ -245,7 +245,7 @@ def desalocar_recurso():
                 "error": "ID do recurso não fornecido"
             }), 400
 
-        resposta = desalocar_recurso(int(recurso_id))
+        resposta = desalocar(int(recurso_id))
 
         if not resposta.get('sucesso'):
             return jsonify({
