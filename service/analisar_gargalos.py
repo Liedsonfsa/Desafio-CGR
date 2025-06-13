@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+from database.conexao import conectar
 from flasgger import swag_from
 
 def analisar_gargalos(equipamento_id: int):
@@ -35,7 +36,7 @@ def analisar_gargalos(equipamento_id: int):
               example: 1
             nome_equipamento:
               type: string
-              example: "Servidor Principal"
+              example: "Switch Principal"
             total_recursos:
               type: integer
               example: 10
@@ -58,10 +59,10 @@ def analisar_gargalos(equipamento_id: int):
                     example: 5
                   tipo_recurso:
                     type: string
-                    example: "CPU"
+                    example: "Porta Ethernet"
                   valor_recurso:
                     type: string
-                    example: "Intel Xeon 3.5GHz"
+                    example: "Eth0/2"
                   status:
                     type: string
                     example: "Indisponível"
@@ -103,8 +104,6 @@ def analisar_gargalos(equipamento_id: int):
               type: string
               example: "2023-05-22 10:15:00"
     """
-    conn = sqlite3.connect('equipamentos.db')
-    cursor = conn.cursor()
     
     resultado = {
         'equipamento_id': equipamento_id,
@@ -113,6 +112,9 @@ def analisar_gargalos(equipamento_id: int):
         'lista_problemas': [],
         'timestamp_analise': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+
+    conn = conectar()
+    cursor = conn.cursor()
     
     try:
         cursor.execute("SELECT nome FROM EquipamentosRede WHERE id = ?", (equipamento_id,))
