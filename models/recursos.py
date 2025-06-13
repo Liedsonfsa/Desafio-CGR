@@ -19,7 +19,7 @@ def buscar_recursos_por_id(equipamentoId: int):
         conn.close()
 
     
-def verificarStatus(id: int, tipo_recurso: str):
+def verificar_status(id: int, tipo_recurso: str):
     conn = None
     try:
         conn = conectar()
@@ -34,7 +34,7 @@ def verificarStatus(id: int, tipo_recurso: str):
     finally:
         conn.close()
 
-def alocar_recurso(id: int, tipo_recurso: str):
+def alocar(id: int, tipo_recurso: str):
     conn = None
     try:
         conn = conectar()
@@ -53,7 +53,7 @@ def alocar_recurso(id: int, tipo_recurso: str):
         if conn:
             conn.close()
     
-def desalocar_recurso(recurso_id: int):
+def desalocar(recurso_id: int):
     conn = None
     try:
         conn = conectar()
