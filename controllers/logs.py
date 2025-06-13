@@ -1,8 +1,9 @@
 from flask import jsonify
 from models.logs import pegar_logs
+from flasgger import swag_from
 
 def logs():
-    """
+  """
     Obtém todos os logs do sistema
     ---
     tags:
@@ -45,24 +46,24 @@ def logs():
       500:
         description: Erro interno do servidor
     """
-    try:
-        logs = pegar_logs()
+  try:
+      logs = pegar_logs()
 
-        if not logs:
-            return jsonify({
-                "sucesso": False,
-                "message": "Nenhum log encontrado",
-                "logs": []
-            }), 404
+      if not logs:
+          return jsonify({
+              "sucesso": False,
+              "message": "Nenhum log encontrado",
+              "logs": []
+          }), 404
 
-        return jsonify({
-            "sucesso": True,
-            "message": "Logs recuperados com sucesso",
-            "logs": logs
-        })
-    except Exception as e:
-        return jsonify({
-            "sucesso": False,
-            "message": "Erro interno ao buscar logs",
-            "error": str(e)
-        }), 500
+      return jsonify({
+          "sucesso": True,
+          "message": "Logs recuperados com sucesso",
+          "logs": logs
+      })
+  except Exception as e:
+      return jsonify({
+          "sucesso": False,
+          "message": "Erro interno ao buscar logs",
+          "error": str(e)
+      }), 500

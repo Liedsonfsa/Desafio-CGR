@@ -1,31 +1,158 @@
 from flask import jsonify, request
 from models.recursos import buscar_recursos_por_id, verificarStatus, alocar_recurso, desalocar_recurso, alocacao_inteligente
 from models.logs import gerar_log
+from flasgger import swag_from
 
 def buscar_recursos_equipamento(equipamento_id: int):
-    try:
-        recursos = buscar_recursos_por_id(equipamento_id)
+  """
+    ---
+    tags:
+      - Recursos
+    summary: Busca recursos de um equipamento
+    description: Retorna todos os recursos associados a um equipamento específico
+    parameters:
+      - name: equipamento_id
+        in: path
+        type: integer
+        required: true
+        description: ID do equipamento
+    responses:
+      200:
+        description: Recursos encontrados
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: true
+            equipamento_id:
+              type: integer
+              example: 1
+            recursos:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  nome:
+                    type: string
+                    example: "Porta Ethernet"
+                  status:
+                    type: string
+                    example: "Disponível"
+      404:
+        description: Nenhum recurso encontrado
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Nenhum recurso encontrado para este equipamento"
+      500:
+        description: Erro interno
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Erro interno ao buscar recursos"
+    """
+  try:
+      recursos = buscar_recursos_por_id(equipamento_id)
 
-        if not recursos:
-            return jsonify({
-                "sucesso": False,
-                "error": "Nenhum recurso encontrado para este equipamento"
-            }), 404
+      if not recursos:
+          return jsonify({
+              "sucesso": False,
+              "error": "Nenhum recurso encontrado para este equipamento"
+          }), 404
 
-        
-        return jsonify({
-            "sucesso": True,
-            "equipamento_id": equipamento_id,
-            "recursos": recursos
-        })
-    
-    except Exception as e:
-        return jsonify({
-            "sucesso": False,
-            "error": "Erro interno ao buscar recursos"
-        }), 500
+      
+      return jsonify({
+          "sucesso": True,
+          "equipamento_id": equipamento_id,
+          "recursos": recursos
+      })
+  
+  except Exception as e:
+      return jsonify({
+          "sucesso": False,
+          "error": "Erro interno ao buscar recursos"
+      }), 500
 
 def alocar_recurso():
+    """
+    ---
+    tags:
+      - Recursos
+    summary: Aloca um recurso
+    description: Aloca um recurso específico de um equipamento
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - equipamento_id
+            - tipo_recurso
+          properties:
+            equipamento_id:
+              type: integer
+              example: 1
+            tipo_recurso:
+              type: string
+              example: "Porta Ethernet"
+    responses:
+      200:
+        description: Recurso alocado com sucesso
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: string
+              example: "recurso alocado com sucesso"
+      400:
+        description: Dados incompletos
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Dados incompletos no request"
+      409:
+        description: Recurso não disponível
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Recurso não disponível para alocação"
+      500:
+        description: Erro interno
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Erro interno ao alocar recurso"
+    """
     try:
         request_data = request.get_json()
 
@@ -59,6 +186,56 @@ def alocar_recurso():
         }), 500
 
 def desalocar_recurso():
+    """
+    ---
+    tags:
+      - Recursos
+    summary: Desaloca um recurso
+    description: Desaloca um recurso previamente alocado
+    parameters:
+      - name: recurso_id
+        in: query
+        type: integer
+        required: true
+        description: ID do recurso a ser desalocado
+    responses:
+      200:
+        description: Recurso desalocado com sucesso
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: "Recurso desalocado com sucesso"
+            recurso_id:
+              type: integer
+              example: 1
+      400:
+        description: ID não fornecido
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "ID do recurso não fornecido"
+      500:
+        description: Erro interno
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Erro interno ao desalocar recurso"
+    """
     try:
         recurso_id = request.args.get('recurso_id')
 
@@ -90,6 +267,86 @@ def desalocar_recurso():
         }), 500
 
 def alocar_inteligentemente():
+    """
+    ---
+    tags:
+      - Recursos
+    summary: Alocação inteligente de recurso
+    description: Encontra e aloca o melhor recurso disponível para a necessidade
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - tipo_recurso
+          properties:
+            tipo_recurso:
+              type: string
+              example: "Porta Ethernet"
+            equipamento_id:
+              type: integer
+              example: 1
+              required: false
+    responses:
+      200:
+        description: Recurso alocado com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            recurso_id:
+              type: integer
+              example: 1
+            equipamento_id:
+              type: integer
+              example: 1
+            tipo_recurso:
+              type: string
+              example: "Porta Ethernet"
+            valor_recurso:
+              type: string
+              example: "Eth0/1"
+            message:
+              type: string
+              example: "Recurso encontrado"
+      400:
+        description: Tipo de recurso não especificado
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Tipo de recurso não especificado"
+      404:
+        description: Nenhum recurso disponível
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: false
+            message:
+              type: string
+              example: "Nenhum recurso disponível encontrado"
+      500:
+        description: Erro interno
+        schema:
+          type: object
+          properties:
+            sucesso:
+              type: boolean
+              example: false
+            error:
+              type: string
+              example: "Erro interno na alocação inteligente"
+    """
     try:
         request_data = request.get_json()
 
