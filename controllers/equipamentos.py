@@ -5,6 +5,73 @@ from models.recursos import setar_status_falha
 from random import sample, choice
 
 def buscar_todos_equipamentos():
+    """
+    Retorna todos os equipamentos cadastrados no sistema
+    ---
+    tags:
+      - Equipamentos
+    summary: Lista todos os equipamentos
+    description: |
+      Este endpoint retorna uma lista completa de todos os equipamentos registrados no sistema,
+      incluindo seus detalhes como ID, nome, status e outras informações relevantes.
+      
+      **Observações**:
+      - Retorna array vazio se não houver equipamentos cadastrados
+      - A lista é ordenada por ID de equipamento
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Lista de equipamentos retornada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID único do equipamento
+                    example: 1
+                  nome:
+                    type: string
+                    description: Nome descritivo do equipamento
+                    example: "Servidor Principal"
+                  tipo:
+                    type: string
+                    description: Tipo/categoria do equipamento
+                    example: "Servidor"
+                  status:
+                    type: string
+                    description: Status atual do equipamento
+                    example: "Ativo"
+                  ultima_atualizacao:
+                    type: string
+                    format: date-time
+                    description: Data/hora da última atualização
+                    example: "2023-05-20T14:30:00Z"
+      404:
+        description: Nenhum equipamento encontrado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Equipamento não encontrado"
+      500:
+        description: Erro interno no servidor
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Erro interno ao buscar equipamentos"
+    """
     try:
         equipamentos = buscar_equipamentos()
 
@@ -16,6 +83,46 @@ def buscar_todos_equipamentos():
         return jsonify({"error": "Erro interno ao buscar equipamentos"}), 500
 
 def buscar_equipamento_por_ID(id: int):
+    """
+    Busca um equipamento pelo ID
+    ---
+    tags:
+      - Equipamentos
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID do equipamento
+    responses:
+      200:
+        description: Dados do equipamento
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: "Equipamento encontrado"
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                nome:
+                  type: string
+                  example: "Servidor Principal"
+                status:
+                  type: string
+                  example: "Ativo"
+      404:
+        description: Equipamento não encontrado
+      500:
+        description: Erro interno do servidor
+    """
     try:
         equipamento = buscar_equipamento(id)
 

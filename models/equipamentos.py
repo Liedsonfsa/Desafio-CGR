@@ -1,66 +1,93 @@
 import sqlite3 as sql
+from database.conexao import conectar
 
 def buscar_equipamentos():
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
-    query = 'SELECT * FROM equipamentos'
+        query = 'SELECT * FROM EquipamentosRede'
 
-    cursor.execute(query)
+        cursor.execute(query)
 
-    equipamentos = cursor.fetchall()
-
-    conn.close()
-
-    return equipamentos
+        return cursor.fetchall()
+    except sql.Error as e:
+        print(f"Erro ao buscar equipamentos: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 def buscar_equipamento(id: int):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
-    query = 'SELECT * FROM EquipamentosRede WHERE id = ?'
+        query = 'SELECT * FROM EquipamentosRede WHERE id = ?'
 
-    cursor.execute(query, (id,))
+        cursor.execute(query, (id,))
 
-    equipamento = cursor.fetchone()
-    
-    conn.close()
-
-    return equipamento
+        return cursor.fetchone()
+    except sql.Error as e:
+        print(f"Erro ao buscar equipamento ID {id}: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
 
 def atualizar_status(id: int, novo_status: str):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
-    query = 'UPDATE EquipamentosRede SET status = ? WHERE id = ?'
+        query = 'UPDATE EquipamentosRede SET status = ? WHERE id = ?'
 
-    cursor.execute(query, (novo_status, id))
+        cursor.execute(query, (novo_status, id))
 
-    conn.commit()
-
-    conn.close()
+        conn.commit()
+        return True
+    except sql.Error as e:
+        print(f"Erro ao atualizar status do equipamento ID {id}: {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn:
+            conn.close()
 
 def buscar_recursos(equipamento_id: int):
-    conn = sql.connect('equipamentos.db')
-    cursor = conn.cursor()
-   
-    cursor.execute("SELECT id FROM EquipamentosRede WHERE id = ?", (equipamento_id,))
-    equipamento = cursor.fetchone()
-    if not equipamento:
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+    
+        cursor.execute("SELECT id FROM EquipamentosRede WHERE id = ?", (equipamento_id,))
+        equipamento = cursor.fetchone()
+        if not equipamento:
+            return {
+                "success": False,
+                "message": f"Equipamento com ID {equipamento_id} não encontrado"
+            }
+        
+        cursor.execute("SELECT id, valor_recurso FROM RecursosRede WHERE equipamento_id = ?",(equipamento_id,))
+        recursos = cursor.fetchall()
+    
+        if not recursos:
+            return {
+                "sucesso": False,
+                "message": f"Equipamento {equipamento_id} não possui recursos"
+            }
+        
+        return recursos
+    except sql.Error as e:
+        print(f"Erro ao buscar recursos do equipamento ID {equipamento_id}: {e}")
         return {
             "success": False,
-            "message": f"Equipamento com ID {equipamento_id} não encontrado"
+            "message": "Erro interno ao buscar recursos"
         }
-    
-    cursor.execute("SELECT id, valor_recurso FROM RecursosRede WHERE equipamento_id = ?",(equipamento_id,))
-    recursos = cursor.fetchall()
-
-    conn.close()
-    
-    if not recursos:
-        return {
-            "success": False,
-            "message": f"Equipamento {equipamento_id} não possui recursos"
-        }
-    
-    return recursos
+    finally:
+        if conn:
+            conn.close()
