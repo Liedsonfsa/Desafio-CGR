@@ -2,11 +2,12 @@
 
 O solução para o desafio foi desenvolvida utilizando Python, Flask e SQLite3.
 
-## Arquitetura do projeto
+## Estrutura do projeto
 ```bash
 desafio-cgr/
     |
     |--- controllers/ # manipula as requisiçoes
+    |       |--- analisar_gargalos.py
     |       |--- equipamentos.py
     |       |--- logs.py
     |       |--- recursos.py
@@ -23,7 +24,7 @@ desafio-cgr/
     |       |--- recursos.py
     |
     |--- service/ # cógica de serviço
-    |       |--- analisar_gargalos.py # contém a lógica de serviço da análise de gargalos
+    |       |--- analise.py # contém a lógica de serviço da análise de gargalos
     |       |--- notificacoes.py # contém a lógica de serviço das notificações no terminal
     |
     |--- .gitignore
