@@ -3,7 +3,7 @@ from flasgger import Swagger
 from controllers.equipamentos import buscar_todos_equipamentos, buscar_equipamento_por_ID, alterar_status_equipamento, simular_falha
 from controllers.logs import logs
 from controllers.recursos import buscar_recursos_equipamento, alocar_recurso, desalocar_recurso, alocar_inteligentemente
-from service.analisar_gargalos import analisar_gargalos
+from controllers.analisar_gargalos import analisar_gargalos
 
 app = Flask(__name__)
 
