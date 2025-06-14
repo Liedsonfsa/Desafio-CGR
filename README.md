@@ -3,6 +3,34 @@
 O solução para o desafio foi desenvolvida utilizando Python, Flask e SQLite3.
 
 ## Arquitetura do projeto
+```bash
+desafio-cgr/
+    |
+    |--- controllers/
+    |           |--- equipamentos.py
+    |           |--- logs.py
+    |           |--- recursos.py
+    |
+    |--- database/
+    |       |--- conexao.py
+    |       |--- init.py
+    |       |--- schema.sql
+    |
+    |--- models/
+    |       |--- equipamentos.py
+    |       |--- logs.py
+    |       |--- recursos.py
+    |
+    |--- service/
+    |       |--- analisar_gargalos.py
+    |       |--- notificacoes.py
+    |
+    |--- .gitignore
+    |--- app.py
+    |--- README.md
+    |--- requirements.txt
+
+```
 
 ## Clonando e acessando o repositório
 ```bash
