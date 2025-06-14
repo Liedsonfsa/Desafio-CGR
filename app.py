@@ -23,7 +23,7 @@ app.add_url_rule('/logs', view_func=logs, methods=['GET'])
 app.add_url_rule('/equipamentos/<int:equipamento_id>/recursos', view_func=buscar_recursos_equipamento, methods=['GET'])
 app.add_url_rule('/recursos/alocar', view_func=alocar_recurso, methods=['POST'])
 app.add_url_rule('/recursos/desalocar', view_func=desalocar_recurso, methods=['POST'])
-app.add_url_rule('/recursos/melhor-recurso', view_func=alocar_inteligentemente, methods=['GET'])
+app.add_url_rule('/recursos/melhor-recurso', view_func=alocar_inteligentemente, methods=['POST'])
 app.add_url_rule('/equipamentos/<int:equipamento_id>/simular-falha', view_func=simular_falha, methods=['POST'])
 app.add_url_rule('/analisar-gargalos/<int:equipamento_id>', view_func=analisar_gargalos, methods=['GET'])
 

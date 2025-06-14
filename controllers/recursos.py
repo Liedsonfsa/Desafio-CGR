@@ -361,7 +361,7 @@ def alocar_inteligentemente():
 
         resultado = alocacao_inteligente(tipo_recurso, equipamento_id)
 
-        if not resultado.get('success'):
+        if not resultado.get('sucesso'):
             return jsonify(resultado), 404
         
         gerar_log(

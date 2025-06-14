@@ -130,24 +130,30 @@ def alocacao_inteligente(tipo_recurso: str, equipamento_id: any):
         
         if len(recurso) == 2:
             recurso_id, valor_recurso = recurso
-            equip_id = equipamento_id['equipamento_id']
+            equip_id = int(equipamento_id['equipamento_id'])
         else:
             recurso_id, equip_id, valor_recurso = recurso
         
+        if not alocar(equipamento_id, tipo_recurso):
+            return {
+                "sucesso": False,
+                "message": f"Erro ao alocar o recurso {tipo_recurso} {valor_recurso}"
+            }
+        
         return {
-            "success": True,
+            "sucesso": True,
             "recurso_id": recurso_id,
             "equipamento_id": equip_id,
             "tipo_recurso": tipo_recurso,
             "valor_recurso": valor_recurso,
-            "message": "Recurso encontrado",
+            "message": "Recurso encontrado e alocado inteligentemente",
         }
             
     except sql.Error as e:
         conn.rollback()
         return {
             "success": False,
-            "message": f"Erro ao alocar recurso: {str(e)}",
+            "message": f"Erro ao procurar pelo recurso: {str(e)}",
         }
     finally:
         if conn:
@@ -156,7 +162,7 @@ def alocacao_inteligente(tipo_recurso: str, equipamento_id: any):
 def setar_status_falha(novo_status: str, recurso_id: int):
     conn = None
     try:
-        conn = sql.connect('equipamentos.db')
+        conn = conectar()
         cursor = conn.cursor()
 
         cursor.execute(
