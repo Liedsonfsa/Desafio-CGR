@@ -1,6 +1,7 @@
 import sqlite3 as sql
 from datetime import datetime
 from database.conexao import conectar
+from service.notificacoes import notificar_alocacao, notificar_desalocacao
 
 def buscar_recursos_por_id(equipamentoId: int):
     conn = None
@@ -40,11 +41,22 @@ def alocar(id: int, tipo_recurso: str):
         conn = conectar()
         cursor = conn.cursor()
 
+        cursor.execute("SELECT id FROM RecursosRede WHERE equipamento_id = ? AND tipo_recurso = ?", (id, tipo_recurso))
+        recurso = cursor.fetchone()
+
+        if not recurso:
+            return False
+
+        recurso_id = recurso[0]
+
         query = "UPDATE RecursosRede SET status_alocacao = 'Alocado' WHERE equipamento_id = ? AND tipo_recurso = ?"
 
         cursor.execute(query, (id, tipo_recurso))
-
         conn.commit()
+
+        notificar_alocacao(recurso_id, id, tipo_recurso)
+        return True
+    
     except sql.Error as e:
         print(f"Erro ao alocar recurso: {e}")
         if conn:
@@ -64,6 +76,7 @@ def desalocar(recurso_id: int):
         cursor.execute(query, (recurso_id, ))
         conn.commit()
 
+        notificar_desalocacao(recurso_id)
         return {"sucesso": "Recurso desalocado com sucesso"}
     except sql.Error as e:
         print(f"Erro ao desalocar recurso: {e}")

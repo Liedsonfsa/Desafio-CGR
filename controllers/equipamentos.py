@@ -192,8 +192,11 @@ def alterar_status_equipamento(id: int):
   try:
       request_data = request.get_json()
 
-      novo_status = request_data['status']
-      descricao = request_data['descricao']
+      if not request_data or 'status' not in request_data or 'descricao' not in request_data:
+            return jsonify({"error": "Dados incompletos no request"}), 400
+
+      novo_status = str(request_data['status'])
+      descricao = str(request_data['descricao'])
 
       if not atualizar_status(id, novo_status):
           return jsonify({"error": "Falha ao atualizar status"}), 500

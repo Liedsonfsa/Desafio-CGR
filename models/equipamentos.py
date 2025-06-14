@@ -1,5 +1,6 @@
 import sqlite3 as sql
 from database.conexao import conectar
+from service.notificacoes import notificar_equipamento_offline
 
 def buscar_equipamentos():
     conn = None
@@ -43,11 +44,18 @@ def atualizar_status(id: int, novo_status: str):
         conn = conectar()
         cursor = conn.cursor()
 
+        query = 'SELECT status FROM EquipamentosRede WHERE id = ?'
+        cursor.execute(query, (id, ))
+        status_anterior = cursor.fetchone()[0]
+
         query = 'UPDATE EquipamentosRede SET status = ? WHERE id = ?'
 
         cursor.execute(query, (novo_status, id))
 
         conn.commit()
+
+        if status_anterior != "Offline" and novo_status == "Offline":
+            notificar_equipamento_offline(id)
         return True
     except sql.Error as e:
         print(f"Erro ao atualizar status do equipamento ID {id}: {e}")
