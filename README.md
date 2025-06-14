@@ -526,3 +526,84 @@ Esse endpoint realiza a análise de gargalos de um determinado equipamento.
 ## Lógica aplicada para simular falhas
 
 ## Lógica aplicada para analisar gargalos
+
+O endpoint de alálise de gargalos identifica recursos problemáticos em um equipamento específico e calcula métricas de saúde. As métricas que são levadas em consideração durante a análise são as seguintes:
+- Total de recursos
+- Recursos com problemas
+- Porcentagem de problemas
+- Lista detalhada de recursos problemáticos
+
+Caso o número de recursos com problemas seja > 30%, a resposta da requisição irá conter um campo chamado alerta contendo essa informação.
+
+#### servie/analise.py
+
+Como a lógica da análise está contida nesse arquivo.
+
+É feita uma consulta para obter o nome do equipamento com base no seu id:
+```python
+cursor.execute("SELECT nome FROM EquipamentosRede WHERE id = ?", (equipamento_id,))
+equipamento = cursor.fetchone()
+```
+
+Caso o equipamento nã exista, será retornada essa informação sendo tida como um erro na nossa resposta.
+```python
+if not equipamento:
+    resultado['erro'] = "Equipamento não encontrado"
+    return resultado
+
+# se o equipamento existir, o nome dele será adicionado na resposta.
+resultado['nome_equipamento'] = equipamento[0]
+```
+
+Logo após, é realizada a contagem da quantidade total de recursos associados a esse equipamento utilizando a função COUNT do SQLite:
+```python
+cursor.execute("""
+SELECT COUNT(*) 
+FROM RecursosRede 
+WHERE equipamento_id = ?
+""", (equipamento_id,))
+resultado['total_recursos'] = cursor.fetchone()[0]
+```
+
+Depois, é realizada um consulta que irá selecionar os campos: id, tipo_recurso, valor_recurso, status_alocacao e ultima_atualizacao, de todos os recursos que possuem o status de alocação com os valores Indisponível ou Com Problema. Em seguida, armazena a quantidade de recursos problemáticos na resposta.
+```python
+cursor.execute("""
+SELECT id, tipo_recurso, valor_recurso, status_alocacao, ultima_atualizacao
+FROM RecursosRede
+WHERE equipamento_id = ?
+  AND status_alocacao IN ('Indisponível', 'Com Problema')
+ORDER BY ultima_atualizacao DESC
+""", (equipamento_id,))
+recursos_problematicos = cursor.fetchall()
+resultado['recursos_problematicos'] = len(recursos_problematicos)
+```
+
+Esse trecho, realiza o cálculo para saber qual a porcentagem dos recursos problemáticos: 
+```python
+if resultado['total_recursos'] > 0:
+  porcentagem = (resultado['recursos_problematicos'] / resultado['total_recursos']) * 100
+  resultado['porcentagem_problemas'] = f"{porcentagem:.2f}%"
+  
+  # alerta de porcentagem crítica
+  if porcentagem > 30:
+      resultado['alerta'] = "CRÍTICO: Mais de 30% dos recursos com problemas"
+```
+
+Por fim, são adicionados na resposta, as informações sobre os recursos e também a quantidade de dias que ele está sem atualização.
+```python
+for recurso in recursos_problematicos:
+  id_recurso, tipo, valor, status, ultima_atualizacao = recurso
+  
+  dias_sem_atualizacao = (datetime.now() - datetime.strptime(ultima_atualizacao, "%Y-%m-%d %H:%M:%S")).days
+  
+  resultado['lista_problemas'].append({
+      'recurso_id': id_recurso,
+      'tipo_recurso': tipo,
+      'valor_recurso': valor,
+      'status': status,
+      'ultima_atualizacao': ultima_atualizacao,
+      'dias_sem_atualizacao': dias_sem_atualizacao
+  })
+
+return resultado
+```
