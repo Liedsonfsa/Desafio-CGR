@@ -1,6 +1,7 @@
 import sqlite3 as sql
+from database.conexao import conectar
 
-conn = sql.connect('equipamentos.db')
+conn = conectar()
 
 cursor = conn.cursor()
 
