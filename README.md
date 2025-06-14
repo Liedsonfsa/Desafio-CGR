@@ -525,6 +525,60 @@ Esse endpoint realiza a análise de gargalos de um determinado equipamento.
 
 ## Lógica aplicada para simular falhas
 
+Para simular falhas nos recursos de um equipamento, realixamos primeiro uma busca por todos os recursos desse equipamento.
+- Caso não exista nenhum, retornamos uma mensagem informando isso.
+```python
+recursos = buscar_recursos(equipamento_id)
+
+if not recursos:
+    return jsonify({
+        "success": False,
+        "message": "Nenhum recurso encontrado para o equipamento"
+    }), 404
+```
+
+
+Logo após, calculamos a quantidade de 30% dos recursos para serem afetados. O 1 na função max garante que pelo menos um recurso será afetado.
+```python
+num_falhas = max(1, round(len(recursos) * 0.3))
+```
+
+Após isso, utilizamos a função sample para escolher aleatóriamente quais recursos serão atingidos:
+```python
+recursos_afetados = sample(recursos, num_falhas)
+```
+
+Em seguida, criamos uma lista com as falhas possíveis. Logo após, percorremos os recursos que foram selecionados para serem afetados utilizando um for e a função choice para fazer a escolha da falha. Depois disso, setamos o status de falha no recurso, criamos uma descrição para o log e geramos o log dessa açaõ.
+```python
+falhas_possiveis = ['Indisponível', 'Com Problema']
+
+for recurso_id, valor_recurso in recursos_afetados:
+    novo_status = choice(falhas_possiveis)
+
+    setar_status_falha(novo_status, recurso_id)
+
+    descricao = f"Recurso {valor_recurso} marcado como {novo_status} (simulação)"
+
+    gerar_log(equipamento_id, 'Failure', descricao)
+```
+
+Se tudo isso der certo, retornamos a seguinte resposta:
+```python
+return jsonify({
+    "success": True,
+    "message": f"Simulação de falha concluída. {num_falhas} recursos afetados.",
+    "equipamento_id": equipamento_id,
+    "recursos_afetados": len(recursos_afetados)
+}), 200
+```
+
+Caso contrário, retornamos a seguinte:
+```python
+return jsonify({
+          "success": False,
+          "message": "Erro durante a simulação de falha"
+      }), 500
+```
 ## Lógica aplicada para analisar gargalos
 
 O endpoint de alálise de gargalos identifica recursos problemáticos em um equipamento específico e calcula métricas de saúde. As métricas que são levadas em consideração durante a análise são as seguintes:
@@ -537,9 +591,16 @@ Caso o número de recursos com problemas seja > 30%, a resposta da requisição 
 
 #### servie/analise.py
 
-Como a lógica da análise está contida nesse arquivo.
+Parte da estrutura da resposta. A outra parte fica somente no controllers. Caso ocorra algum erro ainda no controller, só são retornados o id do equipamento e o timestamp da análise:
+```python
+resultado = {
+  'total_recursos': 0,
+  'recursos_problematicos': 0,
+  'lista_problemas': []
+}
+```
 
-É feita uma consulta para obter o nome do equipamento com base no seu id:
+Consulta para obter o nome do equipamento com base no seu id:
 ```python
 cursor.execute("SELECT nome FROM EquipamentosRede WHERE id = ?", (equipamento_id,))
 equipamento = cursor.fetchone()
@@ -606,4 +667,74 @@ for recurso in recursos_problematicos:
   })
 
 return resultado
+```
+
+## Lógica aplicada para alocar um recurso de forma inteligente
+
+Primeiro é feita uma verificação para saber se o id do equipamento está presente no corpo da requisiçao, já que ele não é um campo obrigatório para esse endpoint. 
+- Caso ele esteja presente, montamos uma query onde não é necessária a seleção do id do equipamento.
+- Caso contrário, montamos uma query onde essa seleção é necessária.
+
+O id do equipamento é necessário, pois ele é utilizado para a alocação.
+```python
+query = ""
+params = ()
+
+if isinstance(equipamento_id, dict):
+    id = int(equipamento_id['equipamento_id'])
+    query = """
+    SELECT id, valor_recurso 
+    FROM RecursosRede 
+    WHERE (tipo_recurso = ? 
+    AND status_alocacao = 'Disponível' AND equipamento_id = ?)
+    ORDER BY ultima_atualizacao ASC
+    LIMIT 1
+    """
+    params = (tipo_recurso, id)
+else:
+    query = """
+    SELECT id, equipamento_id, valor_recurso 
+    FROM RecursosRede 
+    WHERE tipo_recurso = ? 
+    AND status_alocacao = 'Disponível'
+    ORDER BY ultima_atualizacao ASC
+    LIMIT 1
+    """
+    params = (tipo_recurso, )
+
+cursor.execute(query, params)
+
+recurso = cursor.fetchone()
+
+# caso o recurso não esteja disponível, retornamos a seguinte resposta
+if not recurso:
+    return {
+        "success": False,
+        "message": "Nenhum recurso disponível encontrado para os critérios informados"
+    }
+
+if len(recurso) == 2:
+    recurso_id, valor_recurso = recurso
+    equip_id = int(equipamento_id['equipamento_id'])
+else:
+    recurso_id, equip_id, valor_recurso = recurso
+```
+
+
+Caso o recurso esteja disponível, tentamos fazer a alocação, por meio da função alocar. Caso essa função retorne o valor False, retornamos uma mensagem informando que aconteceu um erro durante a alocação. Se isso não ocorrer, retornamos algumas informações sobre o recurso.
+```python
+if not alocar(equipamento_id, tipo_recurso):
+  return {
+      "sucesso": False,
+      "message": f"Erro ao alocar o recurso {tipo_recurso} {valor_recurso}"
+  }
+
+return {
+  "sucesso": True,
+  "recurso_id": recurso_id,
+  "equipamento_id": equip_id,
+  "tipo_recurso": tipo_recurso,
+  "valor_recurso": valor_recurso,
+  "message": "Recurso encontrado e alocado inteligentemente",
+}
 ```
