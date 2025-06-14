@@ -3,6 +3,8 @@
 O solução para o desafio foi desenvolvida utilizando Python, Flask e SQLite3.
 
 ## Estrutura do projeto
+
+Essa estrutura foi escolhida com base em um desafio que eu já tinha feito utilizando Go. Como eu não tenho muita experiência desenvolvendo API's em python, tive que me espelhar em uma solução que eu já tinha feito em outra linguagem.
 ```bash
 desafio-cgr/
     |
@@ -95,6 +97,13 @@ python app.py
 - ✅ `GET /logs`
 - ✅ `POST /equipamentos/{id}/simular-falha`
 - ✅ `GET /analisar-gargalos/{id}`
+
+## Swagger
+
+Para utilizar as rotas pelos swagger, basta abrir o navegador e digitar:
+```http
+http://127.0.0.1:5000/apidocs
+```
 
 ## Descrição dos endpoints
 
@@ -738,3 +747,11 @@ return {
   "message": "Recurso encontrado e alocado inteligentemente",
 }
 ```
+
+## Melhorias que podem ser aplicadas ao  projeto
+
+- Implementar uma arquitetura melhor e mais utilizada pela cominudade python
+- Implementar JWT para que algumas rotas sejam exclusivas para determinados tipos de usuário (falo isso imaginando que em um cenário real, algumas dessas rotas não estariam disponíveis para qualquer funcionário)
+- Adicionar testes unitários (acabou que eu não tinha experiência com testes)
+- Adicionar docker
+- Melhorar a lógica para a alocação inteligente (implementar algum algoritmo que seja mais eficiente que a solução utilizada)
