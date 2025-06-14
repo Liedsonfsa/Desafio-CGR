@@ -129,7 +129,7 @@ def alocar_recurso():
               example: false
             error:
               type: string
-              example: "Dados incompletos no request"
+              example: "Dados incompletos ou errados no request"
       409:
         description: Recurso não disponível
         schema:
@@ -159,7 +159,7 @@ def alocar_recurso():
         if not request_data or 'equipamento_id' not in request_data or 'tipo_recurso' not in request_data:
             return jsonify({
                 "sucesso": False,
-                "error": "Dados incompletos no request"
+                "error": "Dados incompletos  ou errados no request"
         }), 400
 
         equipamento_id = int(request_data['equipamento_id'])

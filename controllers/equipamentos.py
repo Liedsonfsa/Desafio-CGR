@@ -51,11 +51,15 @@ def buscar_todos_equipamentos():
                     type: string
                     description: Status atual do equipamento
                     example: "Ativo"
-                  ultima_atualizacao:
+                  ip_gerenciamento:
                     type: string
-                    format: date-time
-                    description: Data/hora da última atualização
-                    example: "2023-05-20T14:30:00Z"
+                    description: IP do equipamento
+                    example: "192.168.1.1"
+                  localizacao:
+                    type: string
+                    description: Local onde o equipamento está localizado
+                    example: Rack 1 - Andar 1
+
       404:
         description: Nenhum equipamento encontrado
         schema:
@@ -184,8 +188,6 @@ def alterar_status_equipamento(id: int):
               example: "Equipamento enviado para manutenção"
       400:
         description: Dados inválidos
-      404:
-        description: Equipamento não encontrado
       500:
         description: Erro interno
     """
@@ -193,7 +195,7 @@ def alterar_status_equipamento(id: int):
       request_data = request.get_json()
 
       if not request_data or 'status' not in request_data or 'descricao' not in request_data:
-            return jsonify({"error": "Dados incompletos no request"}), 400
+            return jsonify({"error": "Dados incompletos ou incorretos no request"}), 400
 
       novo_status = str(request_data['status'])
       descricao = str(request_data['descricao'])

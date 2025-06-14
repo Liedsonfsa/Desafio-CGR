@@ -64,6 +64,5 @@ def logs():
   except Exception as e:
       return jsonify({
           "sucesso": False,
-          "message": "Erro interno ao buscar logs",
-          "error": str(e)
+          "message": "Erro interno ao buscar logs"
       }), 500
